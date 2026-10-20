@@ -1,5 +1,6 @@
 using JetBrains.Annotations;
 using System.Collections;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Assemblies;
@@ -13,6 +14,10 @@ public class SGhost : MonoBehaviour
     [SerializeField] private GameObject witch;
     [SerializeField] private GameObject pumpkin2;
     [SerializeField] private GameObject skull;
+    [SerializeField] private GameObject losePanel;
+    [SerializeField] private GameObject winPanel;
+    [SerializeField] private GameObject flashlight;
+    [SerializeField] private TextMeshProUGUI timeText;
     [SerializeField] private Transform[] positions;
     [SerializeField] private SObjectPossession[] possessedObject;
     private Coroutine ghostCoro;
@@ -23,6 +28,8 @@ public class SGhost : MonoBehaviour
     [SerializeField] private float maxTime = 10f;
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private int currecntPos = 0;
+    [SerializeField] private float time = 60;
+    [SerializeField] private float flashlightTime;
 
     [SerializeField] SPlayer player;
 
@@ -33,6 +40,33 @@ public class SGhost : MonoBehaviour
             Hide();
         }
 
+        if(currecntPos == 7)
+        {
+            Lose();
+        }
+
+        if(time > 0)
+        {
+            time -= Time.deltaTime;
+            TimeDisplay(time);
+        }
+        else
+        {
+            Win();
+        }
+
+        if (player.flashlightOn)
+        {
+            StartCoroutine(FlashlightTime());
+        }
+
+    }
+
+    private void TimeDisplay(float timeToDisplay)
+    {
+        float seconds = Mathf.FloorToInt(timeToDisplay % 60);
+
+        timeText.text = "Time: " + seconds;
     }
 
     private void Start()
@@ -94,6 +128,19 @@ public class SGhost : MonoBehaviour
         }
     }
    
+    private IEnumerator FlashlightTime()
+    {
+        flashlightTime += Time.deltaTime;
+
+        if(flashlightTime > 5)
+        {
+            flashlight.SetActive(false);
+            player.flashlightOn = false;
+            yield return new WaitForSeconds(5f);
+            flashlightTime = 0;
+        }
+        yield return null;
+    }
 
     private void Hide()
     {
@@ -133,5 +180,24 @@ public class SGhost : MonoBehaviour
         {
             possessedObject[index].Possess();
         }
+    }
+
+    private void Lose()
+    {
+        if(currecntPos == 7)
+        {
+            losePanel.SetActive(true);
+            Time.timeScale = 0f;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+    }
+
+    private void Win()
+    {
+        winPanel.SetActive(true);
+        Time.timeScale = 0f;
+        Cursor.lockState= CursorLockMode.None;
+        Cursor.visible = true;
     }
 }
